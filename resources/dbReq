@@ -22,5 +22,9 @@
   {
     "name": "deleteUser",
     "request": "DELETE FROM users WHERE id=$1"
+  },
+  {
+    "name": "InitSession",
+    "request": "INSERT INTO sessions (sid, timeacceced) VALUES ($1, $2)"
   }
 ]

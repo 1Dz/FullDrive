@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="dataSourceStorageLocal">
-    <data-source name="postgres@localhost" uuid="791683e4-d092-4f8b-9cf8-0be6f4dd555c">
-      <database-info product="PostgreSQL" version="9.2.24" jdbc-version="4.2" driver-name="PostgreSQL JDBC Driver" driver-version="42.1.1">
+    <data-source name="postgres@localhost" uuid="9d63eb4d-9005-449e-b0c2-48a5a5f24b1c">
+      <database-info product="PostgreSQL" version="10.0" jdbc-version="4.2" driver-name="PostgreSQL JDBC Driver" driver-version="42.1.1">
         <identifier-quote-string>&quot;</identifier-quote-string>
       </database-info>
       <case-sensitivity plain-identifiers="lower" quoted-identifiers="exact" />
       <secret-storage>master_key</secret-storage>
       <user-name>postgres</user-name>
-      <introspection-schemas>postgres:public</introspection-schemas>
+      <introspection-schemas>netmix:*</introspection-schemas>
     </data-source>
   </component>
 </project>

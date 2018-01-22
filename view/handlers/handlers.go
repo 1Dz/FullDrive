@@ -32,7 +32,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request){
 		uC.Add([]string{firstname, lastname, username, email, password})
 		w.Header().Set("Content-Type", "application/json")
 		js, _ := json.Marshal(uC.GetByName(username))
-		w.Write([]byte(js))
+		templates.Execute(w, js)
 		http.Redirect(w, r, "/main/", http.StatusFound)
 		return
 	}
@@ -49,7 +49,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request){
 		us := uC.GetByName(username)
 		w.Header().Set("Content-Type", "application/json")
 		js, _ := json.Marshal(us)
-		w.Write([]byte(js))
+		templates.Execute(w, js)
 		http.Redirect(w, r, "/main/", http.StatusFound)
 	}
 }

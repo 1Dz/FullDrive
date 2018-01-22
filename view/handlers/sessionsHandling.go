@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+	"fmt"
 )
 
 var provides = make(map[string]Provider)
@@ -26,11 +27,29 @@ type Provider interface{
 	SessionGC(maxLifeTime int64)
 }
 
+type ProviderControl struct{
+	lock sync.Mutex
+}
+
+type SessionControl struct{
+	sid string
+	timeAcceced time.Time
+	value map[interface{}]interface{}
+}
+
 type Session interface{
 	Set(key, value interface{}) error
 	Get(key interface{}) interface{}
 	Delete(key interface{}) error
 	SessionID() string
+}
+
+func NewManager(provideName, cookieName string, maxlifetime int64) (*Manager, error) {
+	provider, ok := provides[provideName]
+	if !ok {
+		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", provideName)
+	}
+	return &Manager{provider: provider, cookieName: cookieName, maxLifeTime: maxlifetime}, nil
 }
 
 func Register(name string, provider Provider){
@@ -96,4 +115,12 @@ func (m *Manager) GC() {
 	time.AfterFunc(time.Duration(m.maxLifeTime), func() {
 		m.GC()
 	})
+}
+
+
+func (p *ProviderControl) SessionInit(sid string)(Session, error){
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	sess := &SessionControl{sid, time.Now(), nil}
+
 }
