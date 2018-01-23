@@ -1,13 +1,7 @@
 package main
 
-import (
-	"Conus/view/handlers"
-	"net/http"
-	"Conus/persistence"
-)
+import "Conus/view/handlers"
 
 func main(){
-	persistence.Init()
-	mux := &handlers.MyMux{}
-	http.ListenAndServe(":8080", mux)
+	handlers.Init()
 }

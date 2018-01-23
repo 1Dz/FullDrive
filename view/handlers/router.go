@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"Conus/model"
 	"Conus/persistence"
+
 )
 
 var pages = map[string] func(w http.ResponseWriter, r *http.Request){
@@ -28,7 +29,11 @@ type UserController struct{
 type MyMux struct{
 
 }
-
+func Init(){
+	persistence.Init()
+	mux := &MyMux{}
+	http.ListenAndServe(":8080", mux)
+}
 func (p *MyMux) ServeHTTP(w http.ResponseWriter, r *http.Request){
 	if pages[r.URL.Path] != nil{
 		pages[r.URL.Path](w, r)
