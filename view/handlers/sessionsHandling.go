@@ -26,6 +26,7 @@ type Provider interface {
 	SessionInit(sid string) (Session, error)
 	SessionRead(sid string) (Session, error)
 	SessionDestroy(sid string) error
+	SessionUpdate(sid string) error
 	SessionGC(maxLifeTime int64)
 }
 
@@ -34,9 +35,9 @@ type ProviderControl struct {
 }
 
 type SessionControl struct {
-	sid         string
-	timeAcceced time.Time
-	value       map[interface{}]interface{}
+	sid         string `json:"sid"`
+	timeAcceced time.Time `json:"-"`
+	value       map[interface{}]interface{} `json:"value"`
 }
 
 type Session interface {
@@ -125,8 +126,15 @@ func (p *ProviderControl) SessionInit(sid string) (Session, error) {
 	time := time.Now()
 	sess := &SessionControl{sid, time, nil}
 	sessionsMeta[sid] = time
-	f, err := os.Open("resources/sessions/" + sid + ".json")
+	f, err := os.Create("resources/sessions/" + sid + ".json")
+	if err != nil{
+		return nil, err
+	}
+	defer f.Close()
 	js, err := json.Marshal(sess)
+	if err != nil{
+		return nil, err
+	}
 	_, err = f.Write([]byte(js))
 	return sess, err
 }
@@ -135,8 +143,15 @@ func (p *ProviderControl) SessionRead(sid string) (Session, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	f, err := os.Open("resources/sessions/" + sid + ".json")
+	if err != nil{
+		return nil, err
+	}
+	defer f.Close()
 	b := make([]byte, 0)
 	_, err = f.Read(b)
+	if err != nil && err != io.EOF{
+		return nil, err
+	}
 	sess := SessionControl{}
 	err = json.Unmarshal(b, sess)
 	sessionTimeMod(&sess)
@@ -164,8 +179,39 @@ func (p *ProviderControl) SessionGC(maxLifeTime int64) error {
 	return err
 }
 
-func (s *SessionControl) Set(key, value interface{}) error{
+func (p *ProviderControl) SessionUpdate(sid string) error {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	sessionsMeta[sid] = time.Now()
+	return nil
+}
 
+func (s *SessionControl) Set(key, value interface{}) error{
+	f, err := os.Open("resources/sessions/" + s.sid + ".json")
+	if err != nil{
+		return err
+	}
+	defer f.Close()
+	s.value[key] = value
+	js, err := json.Marshal(s)
+	if err != nil{
+		return err
+	}
+	_, err = f.Write(js)
+	return err
+}
+
+func (s *SessionControl) Get(key interface{}) interface{}{
+	res, ok := s.value[key]
+	if ok{
+		return res
+	}
+	return nil
+}
+
+func (s *SessionControl) Delete(key interface{}) error{
+	delete(s.value, key)
+	//TODO: Open session file, write updated session, close it
 }
 
 func sessionTimeMod (sess *SessionControl) {

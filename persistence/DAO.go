@@ -41,9 +41,9 @@ func Init(){
 }
 
 func initRequests(){
-	jsn, err := ioutil.ReadFile("resources/dbReq")
+	jsn, err := ioutil.ReadFile("resources/dbReq.json")
 	if err != nil{
-		panic(errors.New("Could not read dbReq file"))
+		panic(errors.New("Could not read dbReq.json file"))
 	}
 	err = json.Unmarshal(jsn, &requests)
 	if err != nil{
@@ -52,7 +52,7 @@ func initRequests(){
 }
 
 func getSettings() string{
-	jsn, err := ioutil.ReadFile("resources/dbSettings")
+	jsn, err := ioutil.ReadFile("resources/dbSettings.json")
 	if err != nil{
 		panic(errors.New("Cannot read db settings"))
 	}
