@@ -152,9 +152,9 @@ func (p *ProviderControl) SessionRead(sid string) (Session, error) {
 	if err != nil && err != io.EOF{
 		return nil, err
 	}
-	sess := SessionControl{}
+	sess := &SessionControl{}
 	err = json.Unmarshal(b, sess)
-	sessionTimeMod(&sess)
+	sessionTimeMod(sess)
 	return sess, err
 }
 
@@ -164,6 +164,13 @@ func (p *ProviderControl) SessionDestroy(sid string) error {
 	err := os.Remove("resources/sessions/" + sid + ".json")
 	delete(sessionsMeta, sid)
 	return err
+}
+
+func (p *ProviderControl) SessionUpdate(sid string) error {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	sessionsMeta[sid] = time.Now()
+	return nil
 }
 
 func (p *ProviderControl) SessionGC(maxLifeTime int64) error {
@@ -177,13 +184,6 @@ func (p *ProviderControl) SessionGC(maxLifeTime int64) error {
 		}
 	}
 	return err
-}
-
-func (p *ProviderControl) SessionUpdate(sid string) error {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	sessionsMeta[sid] = time.Now()
-	return nil
 }
 
 func (s *SessionControl) Set(key, value interface{}) error{
@@ -211,7 +211,58 @@ func (s *SessionControl) Get(key interface{}) interface{}{
 
 func (s *SessionControl) Delete(key interface{}) error{
 	delete(s.value, key)
-	//TODO: Open session file, write updated session, close it
+	f, err := os.Open("resources/sessions/session_meta.json")
+	if err != nil{
+		return err
+	}
+	defer f.Close()
+	var b []byte
+	if _, err = f.Read(b); err != nil && err != io.EOF{
+		return err
+	}
+	var sess []SessionControl
+	if err = json.Unmarshal(b, &sess); err != nil{
+		return err
+	}
+	for i, j := range sess{
+		if j.sid == s.sid{
+			sess = append(sess[:i], sess[i + 1:]...)
+		}
+	}
+	if b, err = json.Marshal(sess); err != nil{
+		return err
+	}
+	if _, err = f.Write(b); err != nil{
+		return err
+	}
+	if err = os.Remove("resources/sessions/" + s.sid + ".json"); err != nil{
+		return err
+	}
+	return nil
+}
+
+func (s *SessionControl) SessionID() string{
+	return s.sid
+}
+
+func (m *Manager) SessionMetaBackup() {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	time.AfterFunc(time.Hour * 12, func() {
+		f, err := os.Open("resources/sessions/session_meta.json")
+		if err != nil{
+			panic(err)
+		}
+		defer f.Close()
+		j, err := json.Marshal(sessionsMeta)
+		if err != nil{
+			panic(err)
+		}
+		if _, err = f.Write(j); err != nil{
+			panic(err)
+		}
+		m.SessionMetaBackup()
+	})
 }
 
 func sessionTimeMod (sess *SessionControl) {
@@ -219,3 +270,4 @@ func sessionTimeMod (sess *SessionControl) {
 	sess.timeAcceced = newTime
 	sessionsMeta[sess.sid] = newTime
 }
+
