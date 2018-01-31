@@ -4,15 +4,16 @@ import (
 	"net/http"
 	"Conus/model"
 	"Conus/persistence"
-
 )
 
+var globalSessions Manager
 var pages = map[string] func(w http.ResponseWriter, r *http.Request){
 	"/": homeHandler,
 	"/register/": registerHandler,
 	"/login/": loginHandler,
 	"/main/": mainHandler,
 }
+
 type Controller interface{
 	GetAll() *[]model.User
 	GetByName(s string) *model.User
@@ -29,11 +30,16 @@ type UserController struct{
 type MyMux struct{
 
 }
+
 func Init(){
 	persistence.Init()
 	mux := &MyMux{}
 	http.ListenAndServe(":8080", mux)
+	globalSessions, _ := NewManager("jsonMemory", "fullDrive", 3600)
+	go globalSessions.SessionMetaBackup()
+	go globalSessions.GC()
 }
+
 func (p *MyMux) ServeHTTP(w http.ResponseWriter, r *http.Request){
 	if pages[r.URL.Path] != nil{
 		pages[r.URL.Path](w, r)

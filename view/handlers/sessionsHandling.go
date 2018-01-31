@@ -47,12 +47,17 @@ type Session interface {
 	SessionID() string
 }
 
+func init(){
+	var prvdr = &ProviderControl{}
+	Register("jsonMemory", prvdr)
+}
+
 func NewManager(provideName, cookieName string, maxlifetime int64) (*Manager, error) {
 	provider, ok := provides[provideName]
 	if !ok {
 		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", provideName)
 	}
-	return &Manager{provider: provider, cookieName: cookieName, maxLifeTime: maxlifetime}, nil
+	return &Manager{provider: provider, cookieName: cookieName, lock: sync.Mutex{} ,maxLifeTime: maxlifetime}, nil
 }
 
 func Register(name string, provider Provider) {
@@ -77,6 +82,7 @@ func (m *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (session 
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	cookie, err := r.Cookie(m.cookieName)
+	fmt.Println(cookie.Value)
 	if err != nil || cookie.Value == "" {
 		sid := m.sessionId()
 		session, _ = m.provider.SessionInit(sid)
@@ -123,9 +129,9 @@ func (m *Manager) GC() {
 func (p *ProviderControl) SessionInit(sid string) (Session, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
-	time := time.Now()
-	sess := &SessionControl{sid, time, nil}
-	sessionsMeta[sid] = time
+	tme := time.Now()
+	sess := &SessionControl{sid, tme, nil}
+	sessionsMeta[sid] = tme
 	f, err := os.Create("resources/sessions/" + sid + ".json")
 	if err != nil{
 		return nil, err
@@ -154,7 +160,7 @@ func (p *ProviderControl) SessionRead(sid string) (Session, error) {
 	}
 	sess := &SessionControl{}
 	err = json.Unmarshal(b, sess)
-	sessionTimeMod(sess)
+	p.SessionUpdate(sess.sid)
 	return sess, err
 }
 
@@ -173,17 +179,15 @@ func (p *ProviderControl) SessionUpdate(sid string) error {
 	return nil
 }
 
-func (p *ProviderControl) SessionGC(maxLifeTime int64) error {
+func (p *ProviderControl) SessionGC(maxLifeTime int64) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
-	var err error
 	for i, j := range sessionsMeta{
 		if j.Unix() + maxLifeTime <= time.Now().Unix(){
 			delete(sessionsMeta, i)
-			err = os.Remove("resources/sessions/" + i + ".json")
+			_ = os.Remove("resources/sessions/" + i + ".json")
 		}
 	}
-	return err
 }
 
 func (s *SessionControl) Set(key, value interface{}) error{
@@ -263,11 +267,5 @@ func (m *Manager) SessionMetaBackup() {
 		}
 		m.SessionMetaBackup()
 	})
-}
-
-func sessionTimeMod (sess *SessionControl) {
-	newTime := time.Now()
-	sess.timeAcceced = newTime
-	sessionsMeta[sess.sid] = newTime
 }
 

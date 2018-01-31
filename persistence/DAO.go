@@ -9,7 +9,6 @@ import (
 	_ "github.com/lib/pq"
 	"strconv"
 	"Conus/model"
-	"Conus/view/handlers"
 )
 
 var db *sql.DB
@@ -178,7 +177,7 @@ func DeleteUser(f float64) error {
 	return nil
 }
 
-func InitSession(sid string) (handlers.Session, error){
+/*func InitSession(sid string) (handlers.Session, error){
 	req, err := getRequestByName("InitSession")
 
-}
+}*/
