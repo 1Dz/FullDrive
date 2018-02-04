@@ -9,6 +9,8 @@ import (
 	_ "github.com/lib/pq"
 	"strconv"
 	"Conus/model"
+	"Conus/view/handlers"
+	"time"
 )
 
 var db *sql.DB
@@ -177,7 +179,37 @@ func DeleteUser(f float64) error {
 	return nil
 }
 
-/*func InitSession(sid string) (handlers.Session, error){
-	req, err := getRequestByName("InitSession")
+func SessionInit(s *handlers.Session) error {
+	if _, err := SessionRead(s.SessionId()); err == nil{
+		return nil
+	}
+	req, err := getRequestByName("initSession")
+	if err != nil{
+		return err
+	}
+	_, err = db.Exec(req, s.SessionId(), s.TimeAcceced(), s.Values())
+	if err != nil{
+		return err
+	}
+	return nil
+}
 
-}*/
+func SessionRead(sid string) (*handlers.Session, error){
+	rows := makeUserQuery([]string{"readSession", sid})
+	var ssid string
+	var timeAcceced time.Time
+	var values []byte
+	for rows.Next(){
+		err := rows.Scan(&ssid, &timeAcceced, &values)
+		if err != nil{
+			return nil, err
+		}
+	}
+	valuesMap := make(map[string]interface{})
+	err := json.Unmarshal(values, valuesMap)
+	if err != nil{
+		return nil, err
+	}
+	return &handlers.Session{ssid, timeAcceced, valuesMap}, nil
+}
+

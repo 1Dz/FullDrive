@@ -24,7 +24,11 @@
     "request": "DELETE FROM users WHERE id=$1"
   },
   {
-    "name": "InitSession",
-    "request": "INSERT INTO sessions (sid, timeacceced) VALUES ($1, $2)"
+    "name": "initSession",
+    "request": "INSERT INTO sessions (sid, timeacceced, values) VALUES ($1, $2, $3)"
+  },
+  {
+    "name": "readSession",
+    "request": "SELECT * FROM sessions WHERE sid = $1"
   }
 ]
