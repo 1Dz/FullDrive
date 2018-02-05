@@ -6,16 +6,16 @@ import (
 )
 
 func userRegisterDataValidation(data []string) (bool, string){
-	if len(data[0]) > 3{
+	if len(data[0]) >= 3{
 		for _, j := range data[0]{
 			if !unicode.IsLetter(j){
 				return false, "First name should not contain digits"
 			}
 		}
 	}else{
-		return false, "Lirst name must be at least 3 characters length"
+		return false, "First name must be at least 3 characters length"
 	}
-	if len(data[1]) > 3{
+	if len(data[1]) >= 3{
 		for _, j := range data[1]{
 			if !unicode.IsLetter(j){
 				return false, "Last name should not contain digits"

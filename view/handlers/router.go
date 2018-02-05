@@ -6,7 +6,7 @@ import (
 	"Conus/persistence"
 )
 
-var globalSessions Manager
+var globalSessions *Manager
 var pages = map[string] func(w http.ResponseWriter, r *http.Request){
 	"/": homeHandler,
 	"/register/": registerHandler,
