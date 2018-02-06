@@ -1,6 +1,8 @@
 package main
 
-import "Conus/view/handlers"
+import (
+	"Conus/view/handlers"
+)
 
 func main(){
 	handlers.Init()

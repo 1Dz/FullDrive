@@ -6,7 +6,7 @@ import (
 	"Conus/persistence"
 )
 
-var globalSessions *Manager
+var globalSessions, _ = persistence.NewManager("pgm", 3600)
 var pages = map[string] func(w http.ResponseWriter, r *http.Request){
 	"/": homeHandler,
 	"/register/": registerHandler,
@@ -35,9 +35,7 @@ func Init(){
 	persistence.Init()
 	mux := &MyMux{}
 	http.ListenAndServe(":8080", mux)
-	globalSessions, _ := NewManager("jsonMemory", "fullDrive", 3600)
-	go globalSessions.SessionMetaBackup()
-	go globalSessions.GC()
+	go globalSessions.SessionGC()
 }
 
 func (p *MyMux) ServeHTTP(w http.ResponseWriter, r *http.Request){
