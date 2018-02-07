@@ -91,7 +91,7 @@ func (m *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (Session,
 }
 
 func (m *Manager) SessionInit(sid string) (Session, error){
-	s := Session{sid, time.Now(), nil}
+	s := Session{sid, time.Now(), make(map[string]interface{}, 0)}
 	err := SessionInit(&s)
 	if err != nil{
 		return Session{}, err

@@ -18,7 +18,7 @@ type Controller interface{
 	GetAll() *[]model.User
 	GetByName(s string) *model.User
 	GetById(f float64) *model.User
-	Add(m []string)
+	Add(m []string) int
 	Update(m []string)
 	Delete(f float64)
 }
@@ -64,8 +64,8 @@ func (c *UserController) GetById(f float64) *model.User{
 	return &r
 }
 
-func (c *UserController) Add(m []string) {
-	e := persistence.AddUser(m)
+func (c *UserController) Add(m []string) int {
+	e, i := persistence.AddUser(m)
 	checkError(e)
 }
 

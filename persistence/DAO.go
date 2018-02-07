@@ -142,16 +142,18 @@ func GetUserById(f float64) (model.User, error) {
 	return user, nil
 }
 
-func AddUser(m []string) error {
+func AddUser(m []string) (int,error) {
 	req, err := getRequestByName("addUser")
 	if err != nil {
-		return err
+		return 0, err
 	}
-	_, err = db.Exec(req, m[0], m[1], m[2], m[3], m[4])
+	//_, err = db.Exec(req, m[0], m[1], m[2], m[3], m[4])
+	var id int
+	err = db.QueryRow(req, m[0], m[1], m[2], m[3], m[4]).Scan(&id)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return id, nil
 }
 
 func UpdateUser(m []string) error {
@@ -206,7 +208,11 @@ func SessionInit(s *Session) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec(req, s.sid, s.timeAcceced, s.values)
+	js, err := json.Marshal(s.values)
+	if err != nil{
+		return err
+	}
+	_, err = db.Exec(req, s.sid, s.timeAcceced, js)
 	if err != nil {
 		return err
 	}
