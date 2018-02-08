@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"html/template"
+	"fmt"
 )
 
 var templates = template.Must(template.ParseFiles("view/templates/home.html", "view/templates/login.html", "view/templates/register.html", "view/templates/main.html"))
@@ -28,7 +29,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request){
 			templates.ExecuteTemplate(w, "register.html", message)
 			return
 		}
-		id := uC.Add([]string{firstname, lastname, username, email, password})
+		uC.Add([]string{firstname, lastname, username, email, password})
 		sess, err := globalSessions.SessionStart(w, r)
 		if err != nil{
 			http.Redirect(w, r, "/main/", http.StatusInternalServerError)
@@ -37,6 +38,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request){
 		sess.Set("firstName", firstname)
 		sess.Set("lastName", lastname)
 		sess.Set("email", email)
+		globalSessions.SessionUpdate(sess.SessionId())
 		http.Redirect(w, r, "/main/", http.StatusFound)
 		return
 	}
@@ -53,7 +55,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request){
 		//TODO: Username and password validation
 		sess, err := globalSessions.SessionStart(w, r)
 		if err != nil{
-			http.Redirect(w, r, "/main/", http.StatusInternalServerError)
+			http.Redirect(w, r, "/home/", http.StatusInternalServerError)
 		}
 		sess.Set("username", username)
 		http.Redirect(w, r, "/main/", http.StatusFound)
@@ -61,5 +63,15 @@ func loginHandler(w http.ResponseWriter, r *http.Request){
 }
 
 func mainHandler (w http.ResponseWriter, r *http.Request){
-	templates.ExecuteTemplate(w, "main.html", nil)
+	s, e := globalSessions.SessionStart(w, r)
+	if e != nil{
+		http.Error(w, "Session Error", http.StatusInternalServerError)
+	}
+	username, ok := s.Values()["username"]
+	fmt.Println(username)
+	if !ok {
+		http.Error(w, "Wrong username", http.StatusNotFound)
+	}
+	u := uC.GetByName(username.(string))
+	templates.ExecuteTemplate(w, "main.html", u)
 }
