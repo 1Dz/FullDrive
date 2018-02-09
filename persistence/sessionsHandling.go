@@ -9,6 +9,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"fmt"
 )
 
 type Manager struct {
@@ -120,6 +121,7 @@ func (m *Manager) SessionUpdate(sid string) error{
 		return err
 	}
 	s.timeAcceced = time.Now()
+	fmt.Println(s.values)
 	err = SessionUpdate(&s)
 	return err
 }

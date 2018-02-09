@@ -54,12 +54,12 @@ func initRequests() {
 func getSettings() string {
 	jsn, err := ioutil.ReadFile("resources/dbSettings.json")
 	if err != nil {
-		panic(errors.New("Cannot read db settings"))
+		panic(err)
 	}
 	var set = new(dbsettings)
 	err = json.Unmarshal(jsn, &set)
 	if err != nil {
-		panic(errors.New("Cannot unmarshal json file of db settings"))
+		panic(err)
 	}
 	return set.String()
 }
