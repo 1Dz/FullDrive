@@ -190,7 +190,7 @@ func GetAllSessions() ([]Session, error) {
 		if err != nil{
 			return []Session{}, err
 		}
-		result = append(result, Session{ssid, timeAcceced, valuesMap})
+		result = append(result, Session{ssid, timeAcceced, *valuesMap})
 	}
 	return result, nil
 }
@@ -207,7 +207,7 @@ func SessionInit(s *Session) error {
 	if err != nil{
 		return err
 	}
-	_, err = db.Exec(req, s.sid, s.timeAcceced, js)
+	_, err = db.Exec(req, s.sid, s.timeAcceced, string(js))
 	if err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func SessionRead(sid string) (Session, error) {
 	if err != nil {
 		return Session{}, err
 	}
-	return Session{ssid, timeAcceced, valuesMap}, nil
+	return Session{ssid, timeAcceced, *valuesMap}, nil
 }
 
 func SessionDestroy(sid string) error{
@@ -253,15 +253,15 @@ func SessionUpdate(s *Session) error{
 	if err != nil{
 		return err
 	}
-	_, err = db.Exec(req, s.sid, s.timeAcceced, jsn)
+	_, err = db.Exec(req, s.sid, s.timeAcceced, string(jsn))
 	if err != nil{
 		return err
 	}
 	return nil
 }
 
-func Unmarshal(values []byte) (map[string]interface{}, error) {
+func Unmarshal(values []byte) (*map[string]interface{}, error) {
 	valuesMap := make(map[string]interface{})
-	err := json.Unmarshal(values, valuesMap)
-	return valuesMap, err
+	err := json.Unmarshal(values, &valuesMap)
+	return &valuesMap, err
 }

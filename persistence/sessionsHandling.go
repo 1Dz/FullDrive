@@ -45,6 +45,7 @@ func (s *Session) Get(key string, value interface{}) (interface{}, error){
 
 func (s *Session) Set(key string, value interface{}) {
 	s.values[key] = value
+	SessionUpdate(s)
 }
 
 func (s *Session) Delete(key string) error{
@@ -92,7 +93,7 @@ func (m *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (Session,
 }
 
 func (m *Manager) SessionInit(sid string) (Session, error){
-	mp := make(map[string]interface{})
+	mp := make(map[string]interface{}, 0)
 	s := Session{sid, time.Now(), mp}
 	err := SessionInit(&s)
 	if err != nil{
