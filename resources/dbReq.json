@@ -41,6 +41,6 @@
   },
   {
     "name": "updateSession",
-    "request": "UPDATE sessions SET time_acceced=$2, values=$3 WHERE sid=$1"
+    "request": "UPDATE sessions SET timeacceced=$2, values=$3 WHERE sid=$1"
   }
 ]

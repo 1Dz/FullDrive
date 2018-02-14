@@ -10,21 +10,17 @@ import (
 )
 
 var id string
-var manager persistence.Manager
 
 func TestSessionsInit(t *testing.T){
 	persistence.Init()
-	manager, err := persistence.NewManager("pgm", 3600)
+	manager := persistence.NewManager("pgm", 3600)
+	s, err := manager.Driver.SessionInit(sessionId())
 	if err != nil{
 		t.Error(err)
 	}
-	s, err := manager.SessionInit(sessionId())
-	if err != nil{
-		t.Error(err)
-	}
-	id = s.SessionId()
+	id = s.SessionID()
 	if s.Values() == nil{
-		t.Error("map value is nil")
+		t.Error("init values map is nil")
 	}
 	t.Log(s.Values())
 }
@@ -43,16 +39,24 @@ func TestUnmarshalMap(t *testing.T){
 }
 
 func TestSessionsReadAndSet(t *testing.T){
-	s, err := manager.SessionRead(id)
+	persistence.Init()
+	manager := persistence.NewManager("pgm", 3600)
+	s, err := manager.Driver.SessionRead(id)
 	if err != nil{
 		t.Error(err)
 		t.Error("session read test failed")
 	}
-	s.Set("username", "username")
-	s, err = manager.SessionRead(s.SessionId())
-	if s.Values()["username"] == nil{
-		t.Error("secondary session read test failed")
+	err = s.Set("username", "username")
+	if err != nil{
+		t.Error("error while setting into session")
+		t.Error(err)
 	}
+	s, err = manager.Driver.SessionRead(s.SessionID())
+	m := s.Values()["username"]
+	if m == nil{
+		t.Error("READ VALUES map is nil")
+	}
+	t.Log(m)
 }
 
 func sessionId() string{

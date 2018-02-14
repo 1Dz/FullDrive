@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 	"html/template"
-	"fmt"
 )
 
 var templates = template.Must(template.ParseFiles("view/templates/home.html", "view/templates/login.html", "view/templates/register.html", "view/templates/main.html"))
@@ -38,9 +37,8 @@ func registerHandler(w http.ResponseWriter, r *http.Request){
 		sess.Set("firstName", firstname)
 		sess.Set("lastName", lastname)
 		sess.Set("email", email)
-		globalSessions.SessionUpdate(sess.SessionId())
-		http.Redirect(w, r, "/main/", http.StatusFound)
-		return
+		globalSessions.Driver.SessionUpdate(sess.SessionID())
+		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
 
@@ -57,7 +55,13 @@ func loginHandler(w http.ResponseWriter, r *http.Request){
 		if err != nil{
 			http.Redirect(w, r, "/home/", http.StatusInternalServerError)
 		}
-		sess.Set("username", username)
+		if len(sess.Values()) == 0 {
+			u := uC.GetByName(username)
+			sess.Set("firstName", u.FirstName)
+			sess.Set("lastName", u.LastName)
+			sess.Set("email", u.Email)
+			sess.Set("username", u.Username)
+		}
 		http.Redirect(w, r, "/main/", http.StatusFound)
 	}
 }
@@ -68,7 +72,6 @@ func mainHandler (w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Session Error", http.StatusInternalServerError)
 	}
 	username, ok := s.Values()["username"]
-	fmt.Println(username)
 	if !ok {
 		http.Error(w, "Wrong username", http.StatusNotFound)
 	}
